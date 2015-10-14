@@ -1,19 +1,46 @@
 import numpy as np
-import scipy as sc
-import numpy.random as rnd
-import scipy.spatial as spa
-import timing
 
-def PAM(D, k, tmax = 100):
-	# Leer datos desde archivo [Temporal]
-	data = np.genfromtxt('iris.data',delimiter=',')
-	temp= spa.distance.pdist(data,'euclidean')
-	D = spa.distance.squareform(temp)
+def EAC(D, N=45, kinterval = [5,30]):
+	"""Do Evidence Accumulation Clustering
+	D= Matriz de distancia
+	N= Numero de clusterings
+	kinterval= Intervalo del cual elejir los k cluster aleatorios	
+	"""		
 	
 	# Obtener dimensiones
 	m,n = D.shape
 	
-	# Generar array de k indices aleatorios de medoides 
+	matrizCoAsoc = np.zeros((n, n))
+	
+	for i in range(N):		
+		# Elije valor aleatorio k entre kinterval[0] y kinterval[1]
+		k = np.random.randint(kinterval[0],kinterval[1])
+		
+		# Ejecuta PAM
+		resultadosPam = PAM(D,k)		
+		clusters = resultadosPam[1]
+		
+		# Actualiza la matriz de co-asociación		
+		for j in range(k):	
+			for row in clusters[j]:
+				for column in clusters[j]:
+					matrizCoAsoc[row][column] = matrizCoAsoc[row][column] + 1/N
+	
+	return matrizCoAsoc
+	
+	
+
+def PAM(D, k, tmax = 100):	
+	"""Do Partitioning Around Medoids
+	D= Matriz de distancia
+	k= Numero de clusters
+	tmax= Numero maximo de iteraciones	
+	"""
+	
+	# Obtener dimensiones
+	m,n = D.shape
+	
+	# Generar array de k indices aleatorios de medoides sin reposicion
 	IndicesMedioides = np.sort(np.random.choice(n,k,False))	
 	
 	NuevoIndicesMedioides = np.copy(IndicesMedioides)
@@ -56,3 +83,4 @@ def PAM(D, k, tmax = 100):
 			Clusters[i] = np.where(J==i)[0]		
 	
 	return IndicesMedioides,Clusters	
+	
