@@ -1,6 +1,6 @@
 import numpy as np
 
-def EAC(D, N=45, kinterval = [5,30]):
+def EAC(D, N=45, low = 5,high = 30):
 	"""Do Evidence Accumulation Clustering
 	D= Matriz de distancia
 	N= Numero de clusterings
@@ -10,21 +10,25 @@ def EAC(D, N=45, kinterval = [5,30]):
 	# Obtener dimensiones
 	m,n = D.shape
 	
-	matrizCoAsoc = np.zeros((n, n))
+	matrizCoAsoc = np.zeros((n, n))		
 	
 	for i in range(N):		
-		# Elije valor aleatorio k entre kinterval[0] y kinterval[1]
-		k = np.random.randint(kinterval[0],kinterval[1])
+		# Elije valor aleatorio k entre low y high
+		if(low!=high):
+			k = np.random.randint(low,high)
+		else: 
+			k = low
 		
 		# Ejecuta PAM
 		resultadosPam = PAM(D,k)		
-		clusters = resultadosPam[1]
+		clusters = resultadosPam[1]		
 		
 		# Actualiza la matriz de co-asociación		
 		for j in range(k):	
-			for row in clusters[j]:
+			for row in clusters[j]:				
 				for column in clusters[j]:
-					matrizCoAsoc[row][column] = matrizCoAsoc[row][column] + 1/N
+					if(row!=column):
+						matrizCoAsoc[row][column] = matrizCoAsoc[row][column] + 1/N
 	
 	return matrizCoAsoc
 	
