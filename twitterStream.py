@@ -1,41 +1,41 @@
-from tweepy import Stream
-from tweepy import OAuthHandler
-from tweepy.streaming import StreamListener
-import time
+from twython import TwythonStreamer
 
-#Necesita un archivo txt que contenga en la primera linea la clave Consumer Key, en la segunda Consumer Secret, tercera Access Token y cuarta Access Token Secret
-twitterDevData = open("TwitterKeys.txt")
-ckey = twitterDevData.readline().rstrip('\n')
-csecret = twitterDevData.readline().rstrip('\n')
-atoken = twitterDevData.readline().rstrip('\n')
-asecret = twitterDevData.readline().rstrip('\n')
-twitterDevData.close()
+class MyStreamer(TwythonStreamer):
+    cant = 1
+    _count = 0
+    tweets = []
+    def on_success(self, data): 
+        self._count = self._count + 1 
+        if 'text' in data:
+            tweet = ' '.join(data['text'].splitlines())
+            print (tweet)
+            self.tweets.append(tweet)
+        if (self._count == self.cant):
+            self.disconnect()
 
-class listener(StreamListener):
+    def on_error(self, status_code, data):
+        print (status_code)
+        self.disconnect()        
+        
+def startStream(termino,cant):
+    """
+    termino: palabra a filtrar
+    cant: cantidad maximas de tweets a buscar
+    """
+    # Necesita un archivo txt que contenga en la primera linea la clave Consumer Key, 
+    # en la segunda Consumer Secret, tercera Access Token y cuarta Access Token Secret
+    keys = open("TwitterKeys.txt").read().splitlines()    
+    stream = MyStreamer(keys[0],keys[1],keys[2],keys[3])
+    
+    stream.cant = cant
+    stream.statuses.filter(track=termino)
+    
+    #Escribe los archivos al disco
+    try:        
+        saveFile = open('tweets.csv','w')        
+        for tweet in stream.tweets:            
+            saveFile.write(tweet+'\n')
+        saveFile.close()
+    except Exception as e:
+        print("error: {0}".format(e))
 
-	def on_data(self, data):
-		try:
-			#print (data)
-
-			tweet = data.split(',"text":"')[1].split('","source')[0]
-			print (tweet)
-
-			#saveFile = open('twitDB.csv','a')
-			#saveFile.write(data)
-			saveFile = open('twitDB2.csv','a')
-			saveThis = str(time.time()) + '::' + tweet
-			saveFile.write(saveThis)
-			saveFile.write('\n')
-			saveFile.close()
-			return True
-		except BaseException:
-			print ('failed ondata')
-			time.sleep(5)
-
-	def on_error(self, status):
-		print (status)
-
-auth = OAuthHandler(ckey, csecret)
-auth.set_access_token(atoken, asecret)
-twitterStream = Stream(auth, listener())
-twitterStream.filter(track=["aaahhlas12ded"])
