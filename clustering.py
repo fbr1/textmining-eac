@@ -77,8 +77,6 @@ def PAM(D, k, return_labels=False,tmax = 100):
                 j = np.argmin(L)
                 NuevoIndicesMedioides[i] = Clusters[i][j]
             else:
-                print(IndicesMedioides)
-                print(Clusters)
                 NuevoIndicesMedioides[i] = IndicesMedioides[i]
                 
         np.sort(NuevoIndicesMedioides)
